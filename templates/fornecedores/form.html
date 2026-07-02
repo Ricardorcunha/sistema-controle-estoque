@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Início</a></li>
+<li class="breadcrumb-item"><a href="{% url 'fornecedores:lista' %}">Fornecedores</a></li>
+<li class="breadcrumb-item active">{{ titulo }}</li>
+{% endblock %}
+{% block conteudo %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-truck me-2 text-primary"></i>{{ titulo }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Nome <span class="text-danger">*</span></label>
+                            {{ form.nome }}
+                            {% if form.nome.errors %}<div class="text-danger small mt-1">{{ form.nome.errors|join:", " }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">CNPJ</label>
+                            {{ form.cnpj }}
+                            {% if form.cnpj.errors %}<div class="text-danger small mt-1">{{ form.cnpj.errors|join:", " }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Telefone</label>
+                            {{ form.telefone }}
+                            {% if form.telefone.errors %}<div class="text-danger small mt-1">{{ form.telefone.errors|join:", " }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors|join:", " }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.ativo }}
+                                <label class="form-check-label fw-semibold" for="{{ form.ativo.id_for_label }}">Fornecedor Ativo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>{{ botao }}</button>
+                        <a href="{% url 'fornecedores:lista' %}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

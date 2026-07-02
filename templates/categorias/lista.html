@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block titulo %}Categorias{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Início</a></li>
+<li class="breadcrumb-item active">Categorias</li>
+{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-tags me-2 text-primary"></i>Categorias</h4>
+    {% if request.user.is_admin %}
+    <a href="{% url 'categorias:criar' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nova Categoria</a>
+    {% endif %}
+</div>
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3">
+        <form method="get" class="d-flex gap-2">
+            <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Buscar por nome..." style="max-width:300px">
+            <button type="submit" class="btn btn-sm btn-outline-primary">Buscar</button>
+            {% if q %}<a href="{% url 'categorias:lista' %}" class="btn btn-sm btn-outline-secondary">Limpar</a>{% endif %}
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th><th>Nome</th><th>Descrição</th><th>Produtos</th><th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for categoria in categorias %}
+                <tr>
+                    <td class="text-muted small">{{ categoria.pk }}</td>
+                    <td class="fw-semibold">{{ categoria.nome }}</td>
+                    <td class="text-muted small">{{ categoria.descricao|truncatechars:50|default:"—" }}</td>
+                    <td><span class="badge bg-primary rounded-pill">{{ categoria.produtos.count }}</span></td>
+                    <td>
+                        {% if request.user.is_admin %}
+                        <a href="{% url 'categorias:editar' categoria.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'categorias:excluir' categoria.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Nenhuma categoria encontrada.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+    <div class="card-footer bg-white">
+        <nav><ul class="pagination pagination-sm mb-0 justify-content-center">
+            {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}">«</a></li>{% endif %}
+            <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}">»</a></li>{% endif %}
+        </ul></nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

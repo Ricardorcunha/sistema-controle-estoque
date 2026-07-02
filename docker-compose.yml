@@ -1,0 +1,75 @@
+# ============================================================
+# docker-compose.yml — Ambiente de desenvolvimento com Docker
+#
+# Serviços:
+#   db    → PostgreSQL 16
+#   web   → Django (API + templates)
+#
+# Para rodar:
+#   cp .env.example .env   # configure as variáveis
+#   docker compose up --build
+# ============================================================
+
+services:
+
+  # ── Banco de dados ────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: estoque_db
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: ${DB_NAME:-estoque_db}
+      POSTGRES_USER: ${DB_USER:-estoque_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-estoque_pass}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-estoque_user} -d ${DB_NAME:-estoque_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Aplicação Django ──────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: estoque_web
+    restart: unless-stopped
+    command: >
+      sh -c "
+        echo 'Aguardando banco...' &&
+        python manage.py migrate --noinput &&
+        echo 'Criando superusuário padrão (se não existir)...' &&
+        python manage.py shell -c \"
+from apps.usuarios.models import Usuario
+if not Usuario.objects.filter(username='admin').exists():
+    Usuario.objects.create_superuser('admin', 'admin@exemplo.com', 'admin123', perfil='admin')
+    print('Superusuário criado: admin / admin123')
+else:
+    print('Superusuário já existe.')
+\" &&
+        echo 'Iniciando servidor...' &&
+        gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --reload
+      "
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DB_HOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    name: estoque_postgres_data
+  media_data:
+    name: estoque_media_data

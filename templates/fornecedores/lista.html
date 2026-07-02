@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block titulo %}Fornecedores{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Início</a></li>
+<li class="breadcrumb-item active">Fornecedores</li>
+{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0"><i class="bi bi-truck me-2 text-primary"></i>Fornecedores</h4>
+    {% if request.user.is_admin %}
+    <a href="{% url 'fornecedores:criar' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Novo Fornecedor</a>
+    {% endif %}
+</div>
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3">
+        <form method="get" class="d-flex gap-2 flex-wrap">
+            <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Buscar por nome..." style="max-width:260px">
+            <select name="status" class="form-select form-select-sm" style="max-width:130px">
+                <option value="">Todos</option>
+                <option value="ativos" {% if status == "ativos" %}selected{% endif %}>Ativos</option>
+                <option value="inativos" {% if status == "inativos" %}selected{% endif %}>Inativos</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-primary">Filtrar</button>
+            {% if q or status %}<a href="{% url 'fornecedores:lista' %}" class="btn btn-sm btn-outline-secondary">Limpar</a>{% endif %}
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th><th>Nome</th><th>CNPJ</th><th>Email</th><th>Telefone</th><th>Status</th><th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fornecedor in fornecedores %}
+                <tr>
+                    <td class="text-muted small">{{ fornecedor.pk }}</td>
+                    <td class="fw-semibold">{{ fornecedor.nome }}</td>
+                    <td class="small">{{ fornecedor.cnpj|default:"—" }}</td>
+                    <td class="small">{{ fornecedor.email|default:"—" }}</td>
+                    <td class="small">{{ fornecedor.telefone|default:"—" }}</td>
+                    <td>
+                        {% if fornecedor.ativo %}
+                        <span class="badge bg-success">Ativo</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if request.user.is_admin %}
+                        <a href="{% url 'fornecedores:editar' fornecedor.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                        <a href="{% url 'fornecedores:excluir' fornecedor.pk %}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Nenhum fornecedor encontrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+    <div class="card-footer bg-white">
+        <nav><ul class="pagination pagination-sm mb-0 justify-content-center">
+            {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ status }}">«</a></li>{% endif %}
+            <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ status }}">»</a></li>{% endif %}
+        </ul></nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

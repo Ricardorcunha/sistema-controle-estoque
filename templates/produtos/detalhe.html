@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block titulo %}{{ produto.nome }}{% endblock %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Início</a></li>
+<li class="breadcrumb-item"><a href="{% url 'produtos:lista' %}">Produtos</a></li>
+<li class="breadcrumb-item active">{{ produto.nome|truncatechars:30 }}</li>
+{% endblock %}
+{% block conteudo %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">{{ produto.nome }}</h4>
+        <span class="text-muted small">ID #{{ produto.pk }} &bull; {{ produto.categoria.nome }}</span>
+    </div>
+    {% if request.user.is_admin %}
+    <div class="d-flex gap-2">
+        <a href="{% url 'movimentacoes:criar' %}?produto={{ produto.pk }}" class="btn btn-success"><i class="bi bi-plus-lg me-1"></i>Movimentar</a>
+        <a href="{% url 'produtos:editar' produto.pk %}" class="btn btn-outline-secondary"><i class="bi bi-pencil me-1"></i>Editar</a>
+        <a href="{% url 'produtos:excluir' produto.pk %}" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Excluir</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-primary"></i>Informações</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5 text-muted small">Status</dt>
+                    <dd class="col-7">
+                        {% if produto.ativo %}<span class="badge bg-success">Ativo</span>{% else %}<span class="badge bg-secondary">Inativo</span>{% endif %}
+                    </dd>
+                    <dt class="col-5 text-muted small">Categoria</dt>
+                    <dd class="col-7 small">{{ produto.categoria.nome }}</dd>
+                    <dt class="col-5 text-muted small">Fornecedor</dt>
+                    <dd class="col-7 small">{{ produto.fornecedor.nome }}</dd>
+                    <dt class="col-5 text-muted small">Preço Unit.</dt>
+                    <dd class="col-7 small fw-semibold">R$ {{ produto.preco }}</dd>
+                    <dt class="col-5 text-muted small">Qtd. Mínima</dt>
+                    <dd class="col-7 small">{{ produto.quantidade_minima }}</dd>
+                    <dt class="col-5 text-muted small">Criado em</dt>
+                    <dd class="col-7 small">{{ produto.criado_em|date:"d/m/Y H:i" }}</dd>
+                    <dt class="col-5 text-muted small">Atualizado</dt>
+                    <dd class="col-7 small">{{ produto.atualizado_em|date:"d/m/Y H:i" }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="row g-3 mb-3">
+            <div class="col-6">
+                <div class="card shadow-sm text-center py-3">
+                    <div class="fs-1 fw-bold {% if produto.esta_sem_estoque %}text-danger{% elif produto.esta_abaixo_do_minimo %}text-warning{% else %}text-success{% endif %}">
+                        {{ produto.quantidade_atual }}
+                    </div>
+                    <div class="text-muted small">Estoque Atual</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card shadow-sm text-center py-3">
+                    <div class="fs-1 fw-bold text-dark">R$ {{ produto.valor_total_estoque }}</div>
+                    <div class="text-muted small">Valor Total em Estoque</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Últimas movimentações -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Últimas Movimentações</h6>
+                <a href="{% url 'movimentacoes:lista' %}?produto={{ produto.pk }}" class="btn btn-sm btn-outline-primary">Ver todas</a>
+            </div>
+            <div class="card-body p-0">
+                {% if movimentacoes %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="table-light"><tr><th>Tipo</th><th>Qtd</th><th>Usuário</th><th>Data</th></tr></thead>
+                        <tbody>
+                            {% for mov in movimentacoes %}
+                            <tr>
+                                <td>
+                                    {% if mov.tipo == 'entrada' %}
+                                    <span class="badge bg-success"><i class="bi bi-arrow-down me-1"></i>Entrada</span>
+                                    {% else %}
+                                    <span class="badge bg-danger"><i class="bi bi-arrow-up me-1"></i>Saída</span>
+                                    {% endif %}
+                                </td>
+                                <td class="fw-bold">{{ mov.quantidade }}</td>
+                                <td>{{ mov.usuario.get_short_name|default:mov.usuario.username }}</td>
+                                <td class="text-muted">{{ mov.data|date:"d/m H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox d-block mb-2 fs-3"></i>Nenhuma movimentação.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
